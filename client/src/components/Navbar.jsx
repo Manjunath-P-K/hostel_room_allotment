@@ -1,13 +1,17 @@
 import { motion } from 'framer-motion';
-import { Building2, Users, FileText, BarChart3 } from 'lucide-react';
+import { Building2, Users, FileText, BarChart3, LogOut, LogIn } from 'lucide-react';
 
-const Navbar = ({ activeTab, setActiveTab }) => {
-  const tabs = [
-    { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
-    { id: 'upload', label: 'Upload Data', icon: FileText },
-    { id: 'allotments', label: 'Room Allotments', icon: Building2 },
-    { id: 'students', label: 'Students', icon: Users },
-  ];
+const Navbar = ({ activeTab, setActiveTab, isAdmin, onLogout, onShowLogin, onHideLogin }) => {
+  const tabs = isAdmin
+    ? [
+        { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
+        { id: 'upload', label: 'Upload Data', icon: FileText },
+        { id: 'allotments', label: 'Room Allotments', icon: Building2 },
+        { id: 'students', label: 'Students', icon: Users },
+      ]
+    : [
+        { id: 'allotments', label: 'Room Allotments', icon: Building2 },
+      ];
 
   return (
     <nav className="bg-white/80 backdrop-blur-md border-b border-white/20 sticky top-0 z-50">
@@ -25,13 +29,16 @@ const Navbar = ({ activeTab, setActiveTab }) => {
             </h1>
           </motion.div>
 
-          <div className="flex space-x-1">
+          <div className="flex space-x-1 items-center">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
                 <motion.button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => {
+                    setActiveTab(tab.id);
+                    if (onHideLogin) onHideLogin(); // Hide login form when clicking tabs
+                  }}
                   className={`relative px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center space-x-2 ${
                     activeTab === tab.id
                       ? 'text-blue-600 bg-blue-50'
@@ -54,6 +61,23 @@ const Navbar = ({ activeTab, setActiveTab }) => {
                 </motion.button>
               );
             })}
+            {isAdmin ? (
+              <button
+                onClick={onLogout}
+                className="ml-4 flex items-center px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 transition"
+                title="Logout"
+              >
+                <LogOut className="h-4 w-4 mr-1" /> Logout
+              </button>
+            ) : (
+              <button
+                onClick={onShowLogin}
+                className="ml-4 flex items-center px-3 py-2 rounded-lg text-blue-600 hover:bg-blue-50 transition"
+                title="Admin Login"
+              >
+                <LogIn className="h-4 w-4 mr-1" /> Admin Login
+              </button>
+            )}
           </div>
         </div>
       </div>

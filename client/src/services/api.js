@@ -17,8 +17,14 @@ const AUTH_CREDENTIALS = {
 // Add auth header for admin requests
 api.interceptors.request.use((config) => {
   if (config.url?.includes('/admin/')) {
-    const token = btoa(`${AUTH_CREDENTIALS.username}:${AUTH_CREDENTIALS.password}`);
-    config.headers.Authorization = `Basic ${token}`;
+    const storedAuth = sessionStorage.getItem('adminAuth');
+    if (storedAuth) {
+      config.headers.Authorization = `Basic ${storedAuth}`;
+    } else {
+      // Fallback to hardcoded credentials if no session
+      const token = btoa(`${AUTH_CREDENTIALS.username}:${AUTH_CREDENTIALS.password}`);
+      config.headers.Authorization = `Basic ${token}`;
+    }
   }
   return config;
 });
@@ -27,6 +33,8 @@ api.interceptors.request.use((config) => {
 export const apiService = {
   // Public endpoints
   getApiInfo: () => api.get('/'),
+  getPublicAllotmentData: () => api.get('/global/allotment-data'),
+  getPublicRoomStatus: () => api.get('/global/room-status'),
   
   // Admin endpoints
   uploadExcel: (file) => {
@@ -57,5 +65,22 @@ export const apiService = {
   
   getUploadedFiles: () => api.get('/admin/uploads'),
 };
+
+const API_BASE = '';
+
+function getAuthHeader() {
+  const auth = sessionStorage.getItem('adminAuth');
+  return auth ? { 'Authorization': 'Basic ' + auth } : {};
+}
+
+export async function fetchAdmin(endpoint, options = {}) {
+  return fetch(API_BASE + endpoint, {
+    ...options,
+    headers: {
+      ...(options.headers || {}),
+      ...getAuthHeader(),
+    },
+  });
+}
 
 export default api;

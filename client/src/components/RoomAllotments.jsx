@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { apiService } from '../services/api';
 
-const RoomAllotments = () => {
+const RoomAllotments = ({ isAdmin = false }) => {
   const [allotmentData, setAllotmentData] = useState(null);
   const [roomStatus, setRoomStatus] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -12,8 +12,8 @@ const RoomAllotments = () => {
   const fetchData = async () => {
     try {
       const [allotmentRes, roomRes] = await Promise.all([
-        apiService.getAllotmentData(),
-        apiService.getRoomStatus()
+        isAdmin ? apiService.getAllotmentData() : apiService.getPublicAllotmentData(),
+        isAdmin ? apiService.getRoomStatus() : apiService.getPublicRoomStatus()
       ]);
       setAllotmentData(allotmentRes.data);
       setRoomStatus(roomRes.data.rooms || []);
@@ -66,17 +66,19 @@ const RoomAllotments = () => {
           Room Allotments
         </motion.h2>
         
-        <motion.button
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          onClick={handleResetAllotment}
-          className="btn-secondary flex items-center space-x-2 hover:bg-red-50 hover:text-red-600 hover:border-red-200"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <RotateCcw className="h-4 w-4" />
-          <span>Reset Allotments</span>
-        </motion.button>
+        {isAdmin && (
+          <motion.button
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            onClick={handleResetAllotment}
+            className="btn-secondary flex items-center space-x-2 hover:bg-red-50 hover:text-red-600 hover:border-red-200"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <RotateCcw className="h-4 w-4" />
+            <span>Reset Allotments</span>
+          </motion.button>
+        )}
       </div>
 
       {/* Room Grid */}
