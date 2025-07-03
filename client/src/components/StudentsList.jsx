@@ -3,7 +3,7 @@ import { Users, Calendar, MapPin } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { apiService } from '../services/api';
 
-const StudentsList = () => {
+const StudentsList = ({ isAdmin = true }) => {
   const [allotmentData, setAllotmentData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -11,7 +11,9 @@ const StudentsList = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await apiService.getAllotmentData();
+        const response = isAdmin ? 
+          await apiService.getAllotmentData() : 
+          await apiService.getPublicAllotmentData();
         setAllotmentData(response.data);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -21,19 +23,23 @@ const StudentsList = () => {
     };
 
     fetchData();
-  }, []);
+  }, [isAdmin]);
 
-  const allStudents = allotmentData?.allotment_data.flatMap(group => 
-    group.students.map(student => ({
+  const allStudents = allotmentData?.allotment_data?.flatMap(group => {
+    if (!group || !Array.isArray(group.students)) {
+      return [];
+    }
+    return group.students.map(student => ({
       ...student,
       group_id: group.group_id,
       room_number: group.room_number
-    }))
-  ) || [];
+    }));
+  }) || [];
 
-  const filteredStudents = allStudents.filter(student =>
-    student['Student Name'].toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredStudents = allStudents.filter(student => {
+    const studentName = student['Student Name'];
+    return studentName && studentName.toLowerCase().includes(searchTerm.toLowerCase());
+  });
 
   if (loading) {
     return (

@@ -16,9 +16,27 @@ const RoomAllotments = ({ isAdmin = false }) => {
         isAdmin ? apiService.getRoomStatus() : apiService.getPublicRoomStatus()
       ]);
       setAllotmentData(allotmentRes.data);
-      setRoomStatus(roomRes.data.rooms || []);
+      
+      // Handle different response formats
+      let roomData = roomRes.data;
+      if (roomData.rooms) {
+        setRoomStatus(roomData.rooms);
+      } else if (roomData.allocated_rooms) {
+        // Convert old format to new format
+        const rooms = [];
+        for (let i = 1; i <= 60; i++) {
+          rooms.push({
+            room_number: i,
+            status: roomData.allocated_rooms.includes(i) ? 'occupied' : 'available'
+          });
+        }
+        setRoomStatus(rooms);
+      } else {
+        setRoomStatus([]);
+      }
     } catch (error) {
       console.error('Error fetching data:', error);
+      setRoomStatus([]);
     } finally {
       setLoading(false);
     }

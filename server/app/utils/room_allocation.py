@@ -75,25 +75,23 @@ def group_students_and_allot_rooms(df: pd.DataFrame) -> List[Dict[str, Any]]:
     for group in groups:
         group_data = {
             'group_id': group['group_id'],
-            'student_names': [],
-            'allocated_room': None,
-            'fee_paid_dates': [],
-            'receipt_file_names': []
+            'room_number': None,
+            'students': [],
+            'earliest_fee_date': group['earliest_fee_date'].strftime('%Y-%m-%d') if group['earliest_fee_date'] else None
         }
         
         # Collect group member data
         preferences = []
         for _, student in group['members'].iterrows():
-            group_data['student_names'].append(student.get('Student Name', 'N/A'))
-            
-            fee_date = parse_date(student.get('Fee Paid Date'))
-            group_data['fee_paid_dates'].append(
-                fee_date.strftime('%Y-%m-%d') if fee_date else 'N/A'
-            )
-            
-            group_data['receipt_file_names'].append(
-                student.get('Fees Photo', 'N/A')
-            )
+            student_data = {
+                'Student Name': student.get('Student Name', 'N/A'),
+                'Fee Paid Date': parse_date(student.get('Fee Paid Date')).strftime('%Y-%m-%d') if parse_date(student.get('Fee Paid Date')) else None,
+                'Fees Photo': student.get('Fees Photo', 'N/A'),
+                'Preference 1': student.get('Preference 1', 'N/A'),
+                'Preference 2': student.get('Preference 2', 'N/A'),
+                'Preference 3': student.get('Preference 3', 'N/A')
+            }
+            group_data['students'].append(student_data)
             
             # Collect preferences for room allotment
             for pref_col in ['Preference 1', 'Preference 2', 'Preference 3']:
@@ -114,7 +112,7 @@ def group_students_and_allot_rooms(df: pd.DataFrame) -> List[Dict[str, Any]]:
                 allocated_rooms.add(room_num)
                 break
         
-        group_data['allocated_room'] = allocated_room
+        group_data['room_number'] = allocated_room
         allotment_data.append(group_data)
     
     return allotment_data
@@ -125,10 +123,19 @@ def get_room_status() -> Dict[str, Any]:
     all_rooms = list(range(1, 61))
     available_rooms = [room for room in all_rooms if room not in allocated_rooms]
     
+    # Create room status list with individual room objects
+    rooms = []
+    for room_num in all_rooms:
+        rooms.append({
+            "room_number": room_num,
+            "status": "occupied" if room_num in allocated_rooms else "available"
+        })
+    
     return {
         "total_rooms": 60,
         "allocated_rooms": sorted(list(allocated_rooms)),
         "available_rooms": sorted(available_rooms),
+        "rooms": rooms,  # Add this for frontend compatibility
         "allocation_summary": {
             "allocated": len(allocated_rooms),
             "available": len(available_rooms)

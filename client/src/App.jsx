@@ -73,7 +73,7 @@ function App() {
       case 'allotments':
         return <RoomAllotments isAdmin={isAdmin} />;
       case 'students':
-        return <StudentsList />;
+        return <StudentsList isAdmin={isAdmin} />;
       default:
         return <RoomAllotments isAdmin={isAdmin} />;
     }
